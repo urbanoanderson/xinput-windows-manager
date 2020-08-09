@@ -6,7 +6,7 @@ namespace XinputWindowsManager
 {
     public class SystemTrayApplicationContext : ApplicationContext
     {
-        private const string APPLICATION_NAME = "Xinput Windows Manager";
+        private const string APPLICATION_NAME_FORMAT = "Xinput Windows Manager v{0}";
 
         private const string TOGGLE_LABEL_TEXT_FORMAT = "Toggle Mouse Mode {0}";
 
@@ -67,7 +67,7 @@ namespace XinputWindowsManager
             {
                 Icon = Properties.Resources.AppIcon,
                 Visible = true,
-                Text = APPLICATION_NAME,
+                Text = string.Format(APPLICATION_NAME_FORMAT, Application.ProductVersion),
                 ContextMenuStrip = this.contextMenuStrip,
             };
         }
