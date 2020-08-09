@@ -120,6 +120,21 @@ namespace XinputWindowsManager
             return this.buttonStates[button].Item1 && !this.buttonStates[button].Item2;
         }
 
+        public bool ButtonCombinationPressed(params GamepadButtonFlags[] buttons)
+        {
+            bool atLeastOneJustPressed = false;
+
+            foreach (GamepadButtonFlags button in buttons)
+            {
+                if (!this.ButtonState(button))
+                    return false;
+
+                atLeastOneJustPressed = atLeastOneJustPressed || this.ButtonPressed(button);
+            }
+
+            return atLeastOneJustPressed;
+        }
+
         public double LeftTriggerState()
         {
             return this.gamepadState.Gamepad.LeftTrigger / MAX_TRIGGER_VALUE;

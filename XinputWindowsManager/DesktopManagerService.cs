@@ -45,7 +45,8 @@ namespace XinputWindowsManager
 
             while (this.ServiceRunning)
             {
-                if (this.gamepad.ButtonPressed(GamepadButtonFlags.Start))
+                if (this.gamepad.ButtonCombinationPressed(
+                    GamepadButtonFlags.Back, GamepadButtonFlags.A, GamepadButtonFlags.X))
                     this.ToggleMouseMode();
 
                 if (MouseModeOn)

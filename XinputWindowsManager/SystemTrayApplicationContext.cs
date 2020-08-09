@@ -25,11 +25,11 @@ namespace XinputWindowsManager
         public SystemTrayApplicationContext()
         {
             this.SetupContextMenu();
+            this.UpdateToggleLabel(false);
 
             this.desktopManagerService = new DesktopManagerService();
             this.desktopManagerService.OnMouseModeToggled += this.HandleMouseModeToggle;
 
-            this.UpdateToggleLabel(false);
             Task.Factory.StartNew(() => this.desktopManagerService.Start());
         }
 
@@ -42,10 +42,10 @@ namespace XinputWindowsManager
 
         private void HandleMouseModeToggle(object o, bool mouseModeOn)
         {
-            this.contextMenuStrip.BeginInvoke((Action)(() =>
-            {
+            if (this.contextMenuStrip.InvokeRequired)
+                this.contextMenuStrip.Invoke((Action)(() =>  this.UpdateToggleLabel(mouseModeOn)));
+            else 
                 this.UpdateToggleLabel(mouseModeOn);
-            }));
         }
 
         private void SetupContextMenu()

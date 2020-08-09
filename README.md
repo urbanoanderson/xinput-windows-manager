@@ -18,7 +18,13 @@ TODO
 
 ## Usage
 
-TODO
+You can toggle mouse mode by right-clicking the system tray icon and selecting the toggle option or by pressing the following button combination on your xinput controller (player one):
+- `BACK` + `A` + `X`
+
+While in mouse mode, the following actions can be performed:
+- `Left analog stick`: controls mouse cursor movement;
+- `A`: performs left click;
+- `X`: performs right click;
 
 ## Release Notes
 
