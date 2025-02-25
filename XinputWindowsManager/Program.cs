@@ -13,9 +13,19 @@ namespace XinputWindowsManager
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            SystemTrayApplicationContext appContext = new SystemTrayApplicationContext();
-            Application.ApplicationExit += appContext.HandleExit;
-            Application.Run(appContext);
+
+            try
+            {
+                // Start System Tray App
+                ManagerConfiguration managerConfiguration = new ManagerConfiguration();
+                SystemTrayApplicationContext appContext = new SystemTrayApplicationContext(managerConfiguration);
+                Application.ApplicationExit += appContext.HandleExit;
+                Application.Run(appContext);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(text: $"{e.Message}", caption: "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
