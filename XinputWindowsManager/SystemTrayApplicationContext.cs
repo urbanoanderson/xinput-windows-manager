@@ -26,7 +26,13 @@ namespace XinputWindowsManager
 
         private ToolStripMenuItem exitLabel;
 
+        private Form helpForm;
+
         private bool desktopManagerActive = false;
+
+        private bool prevLeftTriggerActive = false;
+
+        private bool prevRightTriggerActive = false;
 
         private ManagerConfiguration managerConfiguration;
 
@@ -38,11 +44,12 @@ namespace XinputWindowsManager
 
         private TimeSpan ToggleCooldown = TimeSpan.FromSeconds(1);
 
-        public SystemTrayApplicationContext(ManagerConfiguration managerConfiguration)
+        public SystemTrayApplicationContext(ManagerConfiguration managerConfiguration) : base(new HelpForm())
         {
             this.managerConfiguration = managerConfiguration;
             this.inputSimulator = new InputSimulator();
             this.xinputDevice = new XGamepad();
+            this.helpForm = this.MainForm;
 
             // SetupContextMenu
             this.toggleLabel = new ToolStripMenuItem();
@@ -72,14 +79,16 @@ namespace XinputWindowsManager
             this.xinputDevice.LeftJoystick.Updated += this.HandleLeftJoystickUpdated;
             this.xinputDevice.RightJoystick.Updated += this.HandleRightJoystickUpdated;
             this.xinputDevice.ButtonPressed += this.HandleXinputButtonPressed;
+            this.xinputDevice.ButtonReleased += this.HandleXinputButtonReleased;
             this.xinputDevice.LeftTriggerMove += this.HandleLeftTriggerMove;
             this.xinputDevice.RightTriggerMove += this.HandleRightTriggerMove;
 
+            // Start polling Xinput device
             Task.Run(() => {
                 while (true)
                 {
                     this.xinputDevice.Update();
-                    Task.Delay(TimeSpan.FromMilliseconds(8)).Wait();
+                    Task.Delay(TimeSpan.FromMilliseconds(this.managerConfiguration.XinputPollingDelayMsecs)).Wait();
                 }
             });
         }
@@ -105,7 +114,12 @@ namespace XinputWindowsManager
             }
 
             Debug.WriteLine($"Switching desktop manager active mode to '{this.desktopManagerActive}'");
-            Console.Beep();
+
+            // Play different beep sound when toggling on or off
+            if (this.desktopManagerActive)
+                Console.Beep();
+            else
+                Console.Beep(600, 400);
         }
 
         private bool IsToggleCombinationPressed()
@@ -201,34 +215,62 @@ namespace XinputWindowsManager
         {
             if (!this.desktopManagerActive) { return; }
 
+            bool newTriggerActiveState = this.xinputDevice.LeftTrigger.Value >= this.managerConfiguration.TriggerThreshold;
+            Debug.WriteLine($"Left Trigger States => Prev:{this.prevLeftTriggerActive} | Current:{newTriggerActiveState}");
+
             if (this.IsToggleCombinationPressed())
             {
                 this.ToggleDesktopManager();
                 return;
             }
 
-            if (this.xinputDevice.LeftTrigger.Value >= 1.0)
+            if (this.prevLeftTriggerActive == false && newTriggerActiveState == true)
             {
                 Debug.WriteLine("LT => Sending Windows Key...");
                 this.inputSimulator.Keyboard.KeyPress(VirtualKeyCode.LWIN);
             }
+
+            this.prevLeftTriggerActive = newTriggerActiveState;
         }
 
         private void HandleRightTriggerMove(object? sender, EventArgs e)
         {
             if (!this.desktopManagerActive) { return; }
 
+            bool newTriggerActiveState = this.xinputDevice.RightTrigger.Value >= this.managerConfiguration.TriggerThreshold;
+            Debug.WriteLine($"Right Trigger States => Prev:{this.prevRightTriggerActive} | Current:{newTriggerActiveState}");
+
             if (this.IsToggleCombinationPressed())
             {
                 this.ToggleDesktopManager();
                 return;
             }
 
-            if (this.xinputDevice.RightTrigger.Value >= this.managerConfiguration.TriggerThreshold)
+            // Press Right trigger
+            if (this.prevRightTriggerActive == false && newTriggerActiveState == true)
             {
-                Debug.WriteLine("RT => Minimizing all apps...");
-                this.inputSimulator.Keyboard.ModifiedKeyStroke(new VirtualKeyCode[] { VirtualKeyCode.LWIN }, VirtualKeyCode.VK_D);
+                Debug.WriteLine("RT Pressed => Showing help screen...");
+
+                this.helpForm.Invoke(() => {
+                    this.helpForm.Opacity = 1;
+                    this.helpForm.Show();
+                    this.helpForm.Activate();
+                });
             }
+
+            // Release Right trigger
+            if (this.prevRightTriggerActive == true && newTriggerActiveState == false)
+            {
+                Debug.WriteLine("RT Released => Hiding help screen...");
+
+                this.helpForm.Invoke(() => {
+                    this.helpForm.Opacity = 0;
+                    this.helpForm.Hide();
+                    this.helpForm.Visible = false;
+                });
+            }
+
+            this.prevRightTriggerActive = newTriggerActiveState;
         }
 
         private void HandleXinputButtonPressed(object sender, DigitalButtonEventArgs<XInputButton> e)
@@ -246,7 +288,7 @@ namespace XinputWindowsManager
             if (e.Button.Button == XButtons.A)
             {
                 Debug.WriteLine("A => Sending left click input...");
-                this.inputSimulator.Mouse.LeftButtonClick();
+                this.inputSimulator.Mouse.LeftButtonDown();
             }
             else if (e.Button.Button == XButtons.X)
             {
@@ -303,21 +345,33 @@ namespace XinputWindowsManager
                 Debug.WriteLine("RS => Sending Mute command...");
                 this.inputSimulator.Keyboard.KeyPress(VirtualKeyCode.VOLUME_MUTE);
             }
-
+            else if (e.Button.Button == XButtons.LB)
+            {
+                Debug.WriteLine("LB => Holding Alt...");
+                this.inputSimulator.Keyboard.KeyDown(VirtualKeyCode.MENU);
+            }
             else if (e.Button.Button == XButtons.RB)
             {
-                if (this.xinputDevice.Buttons.LB.IsPressed == true)
-                {
-                    Debug.WriteLine("LB => Holding Alt...");
-                    this.inputSimulator.Keyboard.KeyDown(VirtualKeyCode.MENU);
-                }
-                else
-                {
-                    this.inputSimulator.Keyboard.KeyUp(VirtualKeyCode.MENU);
-                }
-
                 Debug.WriteLine("RB => Sending Tab...");
                 this.inputSimulator.Keyboard.KeyPress(VirtualKeyCode.TAB);
+            }
+        }
+
+        private void HandleXinputButtonReleased(object? sender, DigitalButtonEventArgs<XInputButton> e)
+        {
+            Debug.WriteLine($"Button '{e.Button.Button}' released.");
+
+            if (!this.desktopManagerActive) { return; }
+
+            if (e.Button.Button == XButtons.A)
+            {
+                Debug.WriteLine("A => Sending left click input...");
+                this.inputSimulator.Mouse.LeftButtonUp();
+            }
+            else if (e.Button.Button == XButtons.LB)
+            {
+                Debug.WriteLine("LB => Releasing Alt...");
+                this.inputSimulator.Keyboard.KeyUp(VirtualKeyCode.MENU);
             }
         }
 

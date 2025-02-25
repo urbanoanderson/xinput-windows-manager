@@ -13,6 +13,10 @@ This system tray Windows application allows the user to toggle a desktop manager
 The software was developed so that users with a desktop setup with only gamepad input or at least inconvenient access to keyboard and mouse can perform basic tasks that require these input methods using a gamepad. An example would be my case, where I use a desktop PC with Steam Big Picture in my living room as a DIY game console.
 
 <img src="Images/screenshot1.png" width="100%">
+Manager System tray menu
+
+<img src="Images/help-screen.png" caption="caption" width="100%">
+Help screen
 
 ## Installation
 
@@ -23,9 +27,14 @@ Optional - If you want the app to start with windows do the following:
 1. Create a shortcut of `"XinputWindowsManager.exe"`
 2. Place the shortcut inside the following folder: `"C:\Users\<YOURUSERNAME>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"`
 
+OR (if first option does not work for controlling desktop):
+1. Open Windows "Task Scheduler"
+2. Select "Create Task" with Trigger for "At startup" and action "Start a program"
+3. It might require selecting "Run with highest privilege" if it still does not launch
+
 ## Usage
 
-You can toggle manager mode by right-clicking the system tray icon and selecting the toggle option or by pressing the toggle button combination on your xinput controller (player one). Combination can be set in App.Config and it defaults to:
+You can toggle manager mode by right-clicking the system tray icon and selecting the toggle option or by pressing the toggle button combination on your xinput controller (player one). Combination can be set in the config file and it defaults to:
 - `BACK` + `A` + `X`
 
 While in mouse mode, the following actions can be performed:
@@ -43,7 +52,7 @@ While in mouse mode, the following actions can be performed:
 - `Right analog stick UP/DOWN`: controls system volume;
 - `Right analog stick LEFT/RIGHT`: controls prev/next song;
 
-Other settings can be changes on App.Config but default values should sufice on most cases.
+Other settings can be changes on 'XinputWindowsManager.dll.config' but default values should sufice on most cases.
 
 ## Release Notes
 
@@ -53,6 +62,7 @@ Other settings can be changes on App.Config but default values should sufice on 
 - Upgrade to .NET 8
 - Utilizes XInputium instead of SharpDX for Xinput control
 - Utilizes InputSimulatorCore for Keyboard/Mouse control
+- Implement a help screen and new shortcuts
 
 ### 1.0.0
 

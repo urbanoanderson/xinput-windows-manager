@@ -16,6 +16,7 @@ namespace XinputWindowsManager
 
             try
             {
+                // Start System Tray App
                 ManagerConfiguration managerConfiguration = new ManagerConfiguration();
                 SystemTrayApplicationContext appContext = new SystemTrayApplicationContext(managerConfiguration);
                 Application.ApplicationExit += appContext.HandleExit;
